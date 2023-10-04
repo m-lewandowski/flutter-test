@@ -17,5 +17,12 @@
             console.log(message);
         }
     </script>
+    <script>
+        window.appendImage = function(image) {
+            var imageElement = document.createElement("img");
+            imageElement.src = `data:image/png;base64, ${image}`;
+            document.body.appendChild(imageElement);
+        }
+    </script>
 </body>
 </html>
