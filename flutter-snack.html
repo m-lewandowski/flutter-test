@@ -4,18 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            padding: 20px;
+        }
+        img {
+            max-width: 50%;
+            margin: 20px auto;
+            display: block;
+        }
+    </style>
 </head>
 <body>
-    test
+    <button id="photo-btn">Dodaj zdjęcie</button>
     <script>
         setTimeout(function() {
-            SnackBar.postMessage("Hello from JS!");
+            if (window.SnackBar != null) {
+                window.SnackBar.postMessage("Hello from JS!");
+            }
         }, 5000);
-    </script>
-    <script>
-        window.logMessageFromFlutter = function(message) {
-            console.log(message);
-        }
     </script>
     <script>
         window.appendImage = function(image) {
@@ -28,6 +35,13 @@
         window.getUserAgent = function() {
             return window.navigator.userAgent;
         }
+    </script>
+    <script>
+        document.getElementById("photo-btn").addEventListener("click", function() {
+            if (window.TakePhoto != null) {
+                window.TakePhoto.postMessage("");
+            }
+        });
     </script>
 </body>
 </html>
