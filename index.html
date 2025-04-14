@@ -21,6 +21,9 @@
         }
         
         function notifyParent(height) {
+            if (window.self === window.top) {
+                return;
+            }
             if (height === 0) {
                 return;
             }
