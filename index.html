@@ -7,73 +7,74 @@
 <!--     <script src="https://kaczmarskigroup.pl/scripts/arka-form.js" async></script> -->
     <script>
         function debounce(callback) {
-    var timeout = null;
-    return function (arg) {
-        clearTimeout(timeout);
-        timeout = setTimeout(function () {
-            callback(arg);
-        }, 200);
-    };
-};
+            var timeout = null;
+            return function (arg) {
+                clearTimeout(timeout);
+                timeout = setTimeout(function () {
+                    callback(arg);
+                }, 200);
+            };
+        };
 
-function getCurrentHeight() {
-    return Math.ceil(document.body.offsetHeight);
-}
-
-function notifyParent(height) {
-    if (height === 0) {
-        return;
-    }
-    var messageObject = { height: height, href: window.location.href };
-    window.parent.postMessage(messageObject, "*");
-}
-
-function onEvent() {
-    notifyParent(getCurrentHeight());
-}
-
-var notifyParentWithDebounce = debounce(notifyParent);
-
-function observeDocumentHeight() {
-    try {
-        var prevHeight = document.body.offsetHeight;
-        document.body.style.height = "fit-content";
-
-        onEvent();
-        window.addEventListener("message", onEvent);
-
-        if (window.ResizeObserver != null) {
-            var resizeObserver = new window.ResizeObserver(function (entries) {
-                var currentHeight = Math.ceil(entries[0].contentRect.height);
-                if (currentHeight !== prevHeight) {
-                    notifyParentWithDebounce(currentHeight);
-                    prevHeight = currentHeight;
-                }
-            });
-            resizeObserver.observe(document.body);
-        } else {
-            setInterval(function () {
-                var currentHeight = Math.ceil(document.body.offsetHeight);
-                if (currentHeight !== prevHeight) {
-                    notifyParentWithDebounce(currentHeight);
-                    prevHeight = currentHeight;
-                }
-            }, 200);
+        function getCurrentHeight(element) {
+            var heightWithMargins = element.offsetHeight;
+            heightWithMargins += parseInt(window.getComputedStyle(element).getPropertyValue('margin-top'));
+            heightWithMargins += parseInt(window.getComputedStyle(element).getPropertyValue('margin-bottom'));
+            return Math.ceil(heightWithMargins);
         }
-    } catch (error) {
-        console.log(error);
-    }
-}
 
-if (window.self !== window.top) {
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", observeDocumentHeight);
-    } else {
-        observeDocumentHeight();
-    }
-}
+        function notifyParent(height) {
+            if (height === 0) {
+                return;
+            }
+            var messageObject = { height: height, href: window.location.href };
+            window.parent.postMessage(messageObject, "*");
+        }
 
+        function onEvent() {
+            notifyParent(getCurrentHeight(document.body));
+        }
 
+        var notifyParentWithDebounce = debounce(notifyParent);
+
+        function observeDocumentHeight() {
+            try {
+                var prevHeight = document.body.offsetHeight;
+                document.body.style.height = "fit-content";
+
+                onEvent();
+                window.addEventListener("message", onEvent);
+
+                if (window.ResizeObserver != null) {
+                    var resizeObserver = new window.ResizeObserver(function (entries) {
+                        var currentHeight = getCurrentHeight(entries[0].target);
+                        if (currentHeight !== prevHeight) {
+                            notifyParentWithDebounce(currentHeight);
+                            prevHeight = currentHeight;
+                        }
+                    });
+                    resizeObserver.observe(document.body);
+                } else {
+                    setInterval(function () {
+                        var currentHeight = getCurrentHeight(document.body);
+                        if (currentHeight !== prevHeight) {
+                            notifyParentWithDebounce(currentHeight);
+                            prevHeight = currentHeight;
+                        }
+                    }, 200);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        if (window.self === window.top) {
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", observeDocumentHeight);
+            } else {
+                observeDocumentHeight();
+            }
+        }
     </script>
 </head>
 <body style="background-color: brown;">
