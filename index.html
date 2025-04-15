@@ -68,7 +68,7 @@
             }
         }
 
-        if (window.self === window.top) {
+        if (window.self !== window.top) {
             if (document.readyState === "loading") {
                 document.addEventListener("DOMContentLoaded", observeDocumentHeight);
             } else {
