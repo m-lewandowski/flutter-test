@@ -7,63 +7,71 @@
 <!--     <script src="https://kaczmarskigroup.pl/scripts/arka-form.js" async></script> -->
     <script>
         function debounce(callback) {
-            var timeout = null;
-            return function (arg) {
-                clearTimeout(timeout);
-                timeout = setTimeout(function() {
-                    callback(arg);
-                }, 200);
-            };
-        };
-        
-        function getCurrentHeight() {
-            return Math.ceil(document.documentElement.offsetHeight);
+    var timeout = null;
+    return function (arg) {
+        clearTimeout(timeout);
+        timeout = setTimeout(function () {
+            callback(arg);
+        }, 200);
+    };
+};
+
+function getCurrentHeight() {
+    return Math.ceil(document.documentElement.offsetHeight);
+}
+
+function notifyParent(height) {
+    if (height === 0) {
+        return;
+    }
+    var messageObject = { height: height, href: window.location.href };
+    window.parent.postMessage(messageObject, "*");
+}
+
+function onEvent() {
+    notifyParent(getCurrentHeight());
+}
+
+var notifyParentWithDebounce = debounce(notifyParent);
+
+function observeDocumentHeight() {
+    try {
+        var prevHeight = document.documentElement.offsetHeight;
+
+        onEvent();
+        window.addEventListener("message", onEvent);
+
+        if (window.ResizeObserver != null) {
+            var resizeObserver = new window.ResizeObserver(function (entries) {
+                var currentHeight = Math.ceil(entries[0].contentRect.height);
+                if (currentHeight !== prevHeight) {
+                    notifyParentWithDebounce(currentHeight);
+                    prevHeight = currentHeight;
+                }
+            });
+            resizeObserver.observe(document.documentElement);
+        } else {
+            setInterval(function () {
+                var currentHeight = Math.ceil(document.documentElement.offsetHeight);
+                if (currentHeight !== prevHeight) {
+                    notifyParentWithDebounce(currentHeight);
+                    prevHeight = currentHeight;
+                }
+            }, 200);
         }
-        
-        function notifyParent(height) {
-            if (window.self === window.top) {
-                return;
-            }
-            if (height === 0) {
-                return;
-            }
-            var messageObject = { height: height, href: window.location.href };
-            window.parent.postMessage(messageObject, "*");
-        }
-        
-        function onEvent() {
-            notifyParent(getCurrentHeight());
-        }
-        
-        var notifyParentWithDebounce = debounce(notifyParent);
-        
-        try {
-            var prevHeight = document.documentElement.offsetHeight;
-        
-            window.addEventListener("message", onEvent);
-            window.addEventListener("DOMContentLoaded", onEvent);
-        
-            if (window.ResizeObserver != null) {
-                var resizeObserver = new window.ResizeObserver(function (entries) {
-                    var currentHeight = Math.ceil(entries[0].contentRect.height);
-                    if (currentHeight !== prevHeight) {
-                        notifyParentWithDebounce(currentHeight);
-                        prevHeight = currentHeight;
-                    }
-                });
-                resizeObserver.observe(document.documentElement);
-            } else {
-                setInterval(function () {
-                    var currentHeight = Math.ceil(document.documentElement.offsetHeight);
-                    if (currentHeight !== prevHeight) {
-                        notifyParentWithDebounce(currentHeight);
-                        prevHeight = currentHeight;
-                    }
-                }, 200);
-            }
-        } catch (error) {
-            console.log(error);
-        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+if (window.self !== window.top) {
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", observeDocumentHeight);
+    } else {
+        observeDocumentHeight();
+    }
+}
+
     </script>
 </head>
 <body style="background-color: brown;">
