@@ -17,7 +17,7 @@
 };
 
 function getCurrentHeight() {
-    return Math.ceil(document.documentElement.offsetHeight);
+    return Math.ceil(document.body.offsetHeight);
 }
 
 function notifyParent(height) {
@@ -36,7 +36,8 @@ var notifyParentWithDebounce = debounce(notifyParent);
 
 function observeDocumentHeight() {
     try {
-        var prevHeight = document.documentElement.offsetHeight;
+        var prevHeight = document.body.offsetHeight;
+        document.body.style.height = "fit-content";
 
         onEvent();
         window.addEventListener("message", onEvent);
@@ -49,10 +50,10 @@ function observeDocumentHeight() {
                     prevHeight = currentHeight;
                 }
             });
-            resizeObserver.observe(document.documentElement);
+            resizeObserver.observe(document.body);
         } else {
             setInterval(function () {
-                var currentHeight = Math.ceil(document.documentElement.offsetHeight);
+                var currentHeight = Math.ceil(document.body.offsetHeight);
                 if (currentHeight !== prevHeight) {
                     notifyParentWithDebounce(currentHeight);
                     prevHeight = currentHeight;
@@ -71,6 +72,7 @@ if (window.self !== window.top) {
         observeDocumentHeight();
     }
 }
+
 
     </script>
 </head>
